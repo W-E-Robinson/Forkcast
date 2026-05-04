@@ -17,30 +17,6 @@ class Entry: Identifiable {
     }
 }
 
-struct FoodDisplay: View {
-    let item: String
-    let calories: Int
-    let protein: Int
-    
-    var body: some View {
-        HStack {
-            Text(
-                "\(item) -"
-            )
-            Text(
-                "calories: \(calories)"
-            )
-            Text(
-                "protein: \(protein)"
-            )
-        }
-        .padding(
-            [.bottom],
-            5
-        )
-    }
-}
-
 struct ContentView: View {
     @Query private var entries: [Entry]
     @Environment(\.modelContext) private var context
@@ -48,6 +24,54 @@ struct ContentView: View {
     @State private var itemToAdd = ""
     @State private var caloriesToAdd = ""
     @State private var proteinToAdd = ""
+    
+    struct FoodDisplay: View {
+        @Environment(\.modelContext) private var context
+        
+        let id: UUID
+        let item: String
+        let calories: Int
+        let protein: Int
+        
+        private func removeEntry(
+            id: UUID,
+        ) -> Void {
+            do {
+                let descriptor = FetchDescriptor<Entry>(
+                    predicate: #Predicate { entry in
+                        entry.id == id
+                    }
+                )
+                
+                let oldEntries = try context.fetch(descriptor)
+                oldEntries.forEach { context.delete($0) }
+                try context.save()
+            } catch {
+                print("Removal failed:", error)
+            }
+        }
+        
+        var body: some View {
+            HStack {
+                Text(
+                    "\(item) -"
+                )
+                Text(
+                    "calories: \(calories)"
+                )
+                Text(
+                    "protein: \(protein)"
+                )
+                Button("Remove") {
+                    removeEntry(id: id)
+                }
+            }
+            .padding(
+                [.bottom],
+                5
+            )
+        }
+    }
     
     private func addEntry(
         item: String,
@@ -149,6 +173,7 @@ struct ContentView: View {
                         id: \.id
                     ) { entry in
                         FoodDisplay(
+                            id: entry.id,
                             item: entry.item,
                             calories: entry.calories,
                             protein: entry.protein
@@ -201,8 +226,6 @@ struct ContentView: View {
                 isAdditionDisabled(item: itemToAdd, calories: caloriesToAdd, protein: proteinToAdd)
             )
             // NOTE: will this being at bottom muck with pop up keyboard? = yeah a little bit
-            // NOTE: got a way for only numbers to appear on C/P entry?
-            // NOTE: need a way to delete an item
         }.task{
             deleteEntriesFromPreviousDays()
         }
