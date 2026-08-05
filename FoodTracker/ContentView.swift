@@ -37,6 +37,27 @@ struct ContentView: View {
             print("Delete failed:", error)
         }
     }
+
+    private func scheduleRebuildReminder() {
+        let center = UNUserNotificationCenter.current()
+        center.requestAuthorization(options: [.alert, .sound]) { granted, _ in
+            guard granted else { return }
+
+            let content = UNMutableNotificationContent()
+            content.title = "Forkcast"
+            content.body = "Re build app"
+            content.sound = .default
+
+            var dateComponents = DateComponents()
+            dateComponents.weekday = 2 // Monday
+            dateComponents.hour = 7
+            dateComponents.minute = 00
+
+            let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
+            let request = UNNotificationRequest(identifier: "weeklyRebuildReminder", content: content, trigger: trigger)
+            center.add(request)
+        }
+    }
     
     var body: some View {
         TabView{
@@ -44,6 +65,7 @@ struct ContentView: View {
             EntryInput()
         }.task{
             deleteEntriesFromPreviousDays()
+            scheduleRebuildReminder()
         }
     }
 }
