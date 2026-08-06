@@ -13,7 +13,5 @@ Just wanted a simple app to track calories and be aware of protein intake. On ap
 </p>
 
 ## Future ideas
-- Calorie input keyboard is only numbers
-- Protein input keyboard is only numbers
 - Adding an entry moves to the entries log screen and removes keyboard
 - Control the order of entries when added (probably latest entries at bottom)

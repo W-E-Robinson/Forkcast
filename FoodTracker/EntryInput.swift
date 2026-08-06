@@ -69,15 +69,17 @@ struct EntryInput: View {
                 text: $caloriesToAdd
             )
             .autocorrectionDisabled()
+            .keyboardType(.numberPad)
             .multilineTextAlignment(
                 .center
             )
-            
+
             TextField(
                 "Add Protein",
                 text: $proteinToAdd
             )
             .autocorrectionDisabled()
+            .keyboardType(.numberPad)
             .multilineTextAlignment(
                 .center
             )
