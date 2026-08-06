@@ -3,10 +3,16 @@ import SwiftData
 
 struct EntryInput: View {
     @Environment(\.modelContext) private var context
-    
+
     @State private var itemToAdd = ""
     @State private var caloriesToAdd = ""
     @State private var proteinToAdd = ""
+
+    private enum Field {
+        case item, calories, protein
+    }
+
+    @FocusState private var focusedField: Field?
     
     private func addEntry(
         item: String,
@@ -63,7 +69,12 @@ struct EntryInput: View {
             .multilineTextAlignment(
                 .center
             )
-            
+            .focused($focusedField, equals: .item)
+            .submitLabel(.next)
+            .onSubmit {
+                focusedField = .calories
+            }
+
             TextField(
                 "Add Calories",
                 text: $caloriesToAdd
@@ -73,6 +84,7 @@ struct EntryInput: View {
             .multilineTextAlignment(
                 .center
             )
+            .focused($focusedField, equals: .calories)
 
             TextField(
                 "Add Protein",
@@ -83,12 +95,14 @@ struct EntryInput: View {
             .multilineTextAlignment(
                 .center
             )
-            
+            .focused($focusedField, equals: .protein)
+
             Divider()
-            
+
             Button(
                 "Add",
                 action: {
+                    focusedField = nil
                     handleAddButtonClick(
                         item: itemToAdd,
                         calories: caloriesToAdd,
@@ -98,6 +112,20 @@ struct EntryInput: View {
             .disabled(
                 isAdditionDisabled(item: itemToAdd, calories: caloriesToAdd, protein: proteinToAdd)
             )
+
+            Spacer()
+        }
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") {
+                    focusedField = nil
+                }
+            }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            focusedField = nil
         }
     }
 }
