@@ -41,6 +41,41 @@ class Entry: Identifiable {
 
 let calorieLimit = 2000
 
+private let launchEmojis = ["🍎", "🍕", "🍔", "🥑", "🍩", "🍗", "🍜", "🍇", "🥕", "🍉", "🍓", "🌽"]
+
+private struct FloatingEmojiColumn: View {
+    let emojis: [String]
+    let rowHeight: CGFloat
+    let rowCount: Int
+    let duration: Double
+    let movingUp: Bool
+
+    @State private var offsetY: CGFloat = 0
+
+    private var loopHeight: CGFloat { CGFloat(rowCount) * rowHeight }
+
+    private func emoji(at index: Int) -> String {
+        emojis[index % emojis.count]
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ForEach(0..<(rowCount * 2), id: \.self) { index in
+                Text(emoji(at: index))
+                    .font(.system(size: rowHeight * 0.6))
+                    .frame(height: rowHeight)
+            }
+        }
+        .offset(y: offsetY)
+        .onAppear {
+            offsetY = movingUp ? 0 : -loopHeight
+            withAnimation(.linear(duration: duration).repeatForever(autoreverses: false)) {
+                offsetY = movingUp ? -loopHeight : 0
+            }
+        }
+    }
+}
+
 struct ContentView: View {
     @Environment(\.modelContext) private var context
     @Query private var entries: [Entry]
@@ -52,6 +87,11 @@ struct ContentView: View {
     private var calorieStatusColor: Color {
         totalCalories <= calorieLimit ? .green : .red
     }
+
+    @State private var showLaunchAnimation = true
+    @State private var launchIconScale: CGFloat = 0.6
+    @State private var launchIconOpacity: Double = 0
+    @State private var launchTitleOpacity: Double = 0
 
     private func deleteEntriesFromPreviousDays( ) -> Void{
         do {
@@ -93,20 +133,94 @@ struct ContentView: View {
     }
     
     var body: some View {
-        TabView {
-            EntriesLog()
-                .tabItem {
-                    Label("Log", systemImage: "fork.knife")
-                }
-            EntryInput()
-                .tabItem {
-                    Label("Add", systemImage: "plus.circle.fill")
-                }
+        ZStack {
+            TabView {
+                EntriesLog()
+                    .tabItem {
+                        Label("Log", systemImage: "fork.knife")
+                    }
+                EntryInput()
+                    .tabItem {
+                        Label("Add", systemImage: "plus.circle.fill")
+                    }
+            }
+            .tint(calorieStatusColor)
+            .opacity(showLaunchAnimation ? 0 : 1)
+            .task {
+                deleteEntriesFromPreviousDays()
+                scheduleRebuildReminder()
+            }
+
+            if showLaunchAnimation {
+                launchOverlay
+            }
         }
-        .tint(calorieStatusColor)
-        .task {
-            deleteEntriesFromPreviousDays()
-            scheduleRebuildReminder()
+    }
+
+    private func rotatedEmojis(by amount: Int) -> [String] {
+        let count = launchEmojis.count
+        let shift = ((amount % count) + count) % count
+        return Array(launchEmojis[shift...] + launchEmojis[..<shift])
+    }
+
+    private var emojiBackground: some View {
+        GeometryReader { geo in
+            let rowHeight: CGFloat = 46
+            let rowCount = Int(ceil(geo.size.height / rowHeight)) + 1
+            let columnCount = 6
+            let columnWidth = geo.size.width / CGFloat(columnCount)
+
+            HStack(spacing: 0) {
+                ForEach(0..<columnCount, id: \.self) { column in
+                    FloatingEmojiColumn(
+                        emojis: rotatedEmojis(by: column * 2),
+                        rowHeight: rowHeight,
+                        rowCount: rowCount,
+                        duration: Double(14 + column * 3),
+                        movingUp: column % 2 == 0
+                    )
+                    .frame(width: columnWidth)
+                }
+            }
+        }
+        .opacity(0.16)
+        .allowsHitTesting(false)
+        .ignoresSafeArea()
+    }
+
+    private var launchOverlay: some View {
+        ZStack {
+            Color(.systemBackground)
+                .ignoresSafeArea()
+
+            emojiBackground
+
+            VStack(spacing: 12) {
+                Image(systemName: "fork.knife.circle.fill")
+                    .font(.system(size: 72))
+                    .foregroundStyle(.orange)
+                    .scaleEffect(launchIconScale)
+                    .opacity(launchIconOpacity)
+
+                Text("Forkcast")
+                    .font(.title2.bold())
+                    .opacity(launchTitleOpacity)
+            }
+        }
+        .transition(.opacity)
+        .onAppear {
+            withAnimation(.spring(response: 1.1, dampingFraction: 0.6)) {
+                launchIconScale = 1.0
+                launchIconOpacity = 1
+            }
+            withAnimation(.easeIn(duration: 0.8).delay(0.5)) {
+                launchTitleOpacity = 1
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.1) {
+                withAnimation(.easeOut(duration: 0.8)) {
+                    showLaunchAnimation = false
+                }
+            }
         }
     }
 }
