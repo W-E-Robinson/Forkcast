@@ -48,9 +48,11 @@ struct EntriesLog: View {
         let calories: Int
         let protein: Int
         let category: MealCategory
-        
+
+        @State private var showingDeleteConfirmation = false
+
         private func removeEntry(
-            id: UUID,
+            id: UUID
         ) -> Void {
             do {
                 let descriptor = FetchDescriptor<Entry>(
@@ -58,7 +60,7 @@ struct EntriesLog: View {
                         entry.id == id
                     }
                 )
-                
+
                 let oldEntries = try context.fetch(descriptor)
                 oldEntries.forEach { context.delete($0) }
                 try context.save()
@@ -66,33 +68,68 @@ struct EntriesLog: View {
                 print("Removal failed:", error)
             }
         }
-        
+
         var body: some View {
             HStack {
-                Text(
-                    "\(item),"
-                )
-                Text(
-                    "calories: \(calories)"
-                )
-                Text(
-                    "protein: \(protein)"
-                )
-                Button("—") {
-                    removeEntry(id: id)
+                Text(item)
+                Spacer()
+                Text("🍽️ \(calories)")
+                Text("🥩 \(protein)")
+
+                ZStack(alignment: .trailing) {
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            showingDeleteConfirmation = true
+                        }
+                    } label: {
+                        Image(systemName: "trash")
+                            .foregroundStyle(.red)
+                    }
+                    .buttonStyle(.plain)
+                    .opacity(showingDeleteConfirmation ? 0 : 1)
+
+                    if showingDeleteConfirmation {
+                        Button {
+                            removeEntry(id: id)
+                        } label: {
+                            Text("Sure?")
+                                .font(.caption.bold())
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(Color.red)
+                                .clipShape(Capsule())
+                        }
+                        .buttonStyle(.plain)
+                        .transition(.move(edge: .trailing).combined(with: .opacity))
+                    }
                 }
             }
             .padding(
                 [.bottom],
                 5
             )
+            .contentShape(Rectangle())
+            .onTapGesture {
+                if showingDeleteConfirmation {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        showingDeleteConfirmation = false
+                    }
+                }
+            }
         }
     }
 
     private var entriesByCategory: [MealCategory: [Entry]] {
         Dictionary(grouping: entries, by: \.category)
     }
-    
+
+    private var categories: [MealCategory] {
+        MealCategory.allCases.filter { category in
+            entries.contains { $0.category == category }
+        }
+    }
+
     private var totalCalories: Int {
         entries
             .reduce(
@@ -129,12 +166,12 @@ struct EntriesLog: View {
             VStack(alignment: .leading, spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
                     HStack {
-                        Text("Calories")
-                            .font(.caption)
+                        Text("🍽️ Calories")
+                            .font(.footnote)
                             .foregroundStyle(.secondary)
                         Spacer()
                         Text("\(totalCalories)")
-                            .font(.caption)
+                            .font(.footnote)
                             .foregroundStyle(.secondary)
                     }
                     NutrientProgressBar(
@@ -147,12 +184,12 @@ struct EntriesLog: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     HStack {
-                        Text("Protein")
-                            .font(.caption)
+                        Text("🥩 Protein")
+                            .font(.footnote)
                             .foregroundStyle(.secondary)
                         Spacer()
                         Text("\(totalProtein)")
-                            .font(.caption)
+                            .font(.footnote)
                             .foregroundStyle(.secondary)
                     }
                     NutrientProgressBar(
@@ -167,37 +204,26 @@ struct EntriesLog: View {
             .padding(.top, 8)
 
             Divider()
-            
-            ScrollView(
-                .vertical,
-                showsIndicators: false
-            ) {
-                VStack(alignment: .leading) {
-                    ForEach(MealCategory.allCases) { category in
-                        if let categoryEntries = entriesByCategory[category], !categoryEntries.isEmpty {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(category.rawValue)
-                                    .font(.headline)
-                                    .padding(.top, 8)
 
-                                ForEach(
-                                    categoryEntries,
-                                    id: \.id
-                                ) { entry in
-                                    EntryDisplay(
-                                        id: entry.id,
-                                        item: entry.item,
-                                        calories: entry.calories,
-                                        protein: entry.protein,
-                                        category: entry.category
-                                    )
-                                }
-                            }
+            List {
+                ForEach(categories) { category in
+                    Section(category.rawValue) {
+                        ForEach(
+                            entriesByCategory[category] ?? [],
+                            id: \.id
+                        ) { entry in
+                            EntryDisplay(
+                                id: entry.id,
+                                item: entry.item,
+                                calories: entry.calories,
+                                protein: entry.protein,
+                                category: entry.category
+                            )
                         }
                     }
                 }
-                .padding(.horizontal)
             }
+            .listSectionSpacing(.compact)
         }
     }
 }
