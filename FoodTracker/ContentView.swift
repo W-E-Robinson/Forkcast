@@ -2,6 +2,16 @@ import SwiftUI
 import Foundation
 import SwiftData
 
+enum MealCategory: String, Codable, CaseIterable, Identifiable {
+    case breakfast = "Breakfast"
+    case morningSnack = "Morning Snack"
+    case lunch = "Lunch"
+    case afternoonSnack = "Afternoon Snack"
+    case dinner = "Dinner"
+
+    var id: String { rawValue }
+}
+
 @Model
 class Entry: Identifiable {
     var id = UUID()
@@ -9,11 +19,13 @@ class Entry: Identifiable {
     var item: String
     var calories: Int
     var protein: Int
-    
-    init(item: String, calories: Int, protein: Int) {
+    var category: MealCategory
+
+    init(item: String, calories: Int, protein: Int, category: MealCategory) {
         self.item = item
         self.calories = calories
         self.protein = protein
+        self.category = category
     }
 }
 

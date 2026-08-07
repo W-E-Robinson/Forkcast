@@ -43,11 +43,12 @@ struct EntriesLog: View {
     
     struct EntryDisplay: View {
         @Environment(\.modelContext) private var context
-        
+
         let id: UUID
         let item: String
         let calories: Int
         let protein: Int
+        let category: MealCategory
         
         private func removeEntry(
             id: UUID,
@@ -87,6 +88,10 @@ struct EntriesLog: View {
                 5
             )
         }
+    }
+
+    private var entriesByCategory: [MealCategory: [Entry]] {
+        Dictionary(grouping: entries, by: \.category)
     }
     
     private var totalCalories: Int {
@@ -168,19 +173,31 @@ struct EntriesLog: View {
                 .vertical,
                 showsIndicators: false
             ) {
-                VStack {
-                    ForEach(
-                        entries,
-                        id: \.id
-                    ) { entry in
-                        EntryDisplay(
-                            id: entry.id,
-                            item: entry.item,
-                            calories: entry.calories,
-                            protein: entry.protein
-                        )
+                VStack(alignment: .leading) {
+                    ForEach(MealCategory.allCases) { category in
+                        if let categoryEntries = entriesByCategory[category], !categoryEntries.isEmpty {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(category.rawValue)
+                                    .font(.headline)
+                                    .padding(.top, 8)
+
+                                ForEach(
+                                    categoryEntries,
+                                    id: \.id
+                                ) { entry in
+                                    EntryDisplay(
+                                        id: entry.id,
+                                        item: entry.item,
+                                        calories: entry.calories,
+                                        protein: entry.protein,
+                                        category: entry.category
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
+                .padding(.horizontal)
             }
         }
     }
