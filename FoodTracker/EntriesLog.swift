@@ -19,14 +19,13 @@ private struct NutrientProgressBar: View {
 
             VStack(alignment: .trailing, spacing: 2) {
                 ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: barHeight / 2)
-                        .fill(Color.gray.opacity(0.2))
+                    Color.gray.opacity(0.2)
 
-                    RoundedRectangle(cornerRadius: barHeight / 2)
-                        .fill(color)
+                    color
                         .frame(width: max(fill, 0))
                 }
                 .frame(height: barHeight)
+                .clipShape(RoundedRectangle(cornerRadius: barHeight / 2))
 
                 Text(limitLabel)
                     .font(.caption2)
