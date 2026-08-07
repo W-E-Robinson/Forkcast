@@ -7,6 +7,7 @@ struct EntryInput: View {
     @State private var itemToAdd = ""
     @State private var caloriesToAdd = ""
     @State private var proteinToAdd = ""
+    @State private var categoryToAdd: MealCategory = .breakfast
 
     private enum Field {
         case item, calories, protein
@@ -17,25 +18,29 @@ struct EntryInput: View {
     private func addEntry(
         item: String,
         calories: Int,
-        protein: Int
+        protein: Int,
+        category: MealCategory
     ) -> Void {
         let newEntry = Entry(
             item: item ,
             calories: calories ,
-            protein: protein
+            protein: protein,
+            category: category
         )
         context.insert(newEntry)
     }
-    
+
     private func handleAddButtonClick(
         item: String,
         calories: String,
-        protein: String
+        protein: String,
+        category: MealCategory
     ) -> Void {
         addEntry(
             item: item,
             calories: Int(calories) ?? 0,
             protein: Int(protein) ?? 0,
+            category: category
         )
         itemToAdd = ""
         caloriesToAdd = ""
@@ -60,69 +65,89 @@ struct EntryInput: View {
     }
     
     var body: some View {
-        VStack {
-            TextField(
-                "Add Item",
-                text: $itemToAdd
-            )
-            .autocorrectionDisabled()
-            .multilineTextAlignment(
-                .center
-            )
-            .focused($focusedField, equals: .item)
-            .submitLabel(.next)
-            .onSubmit {
-                focusedField = .calories
+        VStack(spacing: 24) {
+            Spacer()
+
+            Picker("Category", selection: $categoryToAdd) {
+                ForEach(MealCategory.allCases) { category in
+                    Text(category.rawValue).tag(category)
+                }
             }
+            .pickerStyle(.menu)
+            .tint(.primary)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(
+                Capsule()
+                    .fill(Color(.secondarySystemBackground))
+            )
 
-            TextField(
-                "Add Calories",
-                text: $caloriesToAdd
-            )
-            .autocorrectionDisabled()
-            .keyboardType(.numberPad)
-            .multilineTextAlignment(
-                .center
-            )
-            .focused($focusedField, equals: .calories)
+            VStack(spacing: 14) {
+                TextField(
+                    "Add Item",
+                    text: $itemToAdd
+                )
+                .textInputAutocapitalization(.words)
+                .multilineTextAlignment(
+                    .center
+                )
+                .focused($focusedField, equals: .item)
+                .submitLabel(.next)
+                .onSubmit {
+                    focusedField = .calories
+                }
+                .textFieldStyle(.roundedBorder)
 
-            TextField(
-                "Add Protein",
-                text: $proteinToAdd
-            )
-            .autocorrectionDisabled()
-            .keyboardType(.numberPad)
-            .multilineTextAlignment(
-                .center
-            )
-            .focused($focusedField, equals: .protein)
+                TextField(
+                    "Add Calories",
+                    text: $caloriesToAdd
+                )
+                .autocorrectionDisabled()
+                .keyboardType(.numberPad)
+                .multilineTextAlignment(
+                    .center
+                )
+                .focused($focusedField, equals: .calories)
+                .textFieldStyle(.roundedBorder)
 
-            Divider()
+                TextField(
+                    "Add Protein",
+                    text: $proteinToAdd
+                )
+                .autocorrectionDisabled()
+                .keyboardType(.numberPad)
+                .multilineTextAlignment(
+                    .center
+                )
+                .focused($focusedField, equals: .protein)
+                .textFieldStyle(.roundedBorder)
+            }
+            .frame(maxWidth: 280)
 
             Button(
-                "Add",
                 action: {
                     focusedField = nil
                     handleAddButtonClick(
                         item: itemToAdd,
                         calories: caloriesToAdd,
                         protein: proteinToAdd,
+                        category: categoryToAdd
                     )
-                })
+                }
+            ) {
+                Text("Add")
+                    .fontWeight(.semibold)
+                    .frame(maxWidth: 200)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
             .disabled(
                 isAdditionDisabled(item: itemToAdd, calories: caloriesToAdd, protein: proteinToAdd)
             )
 
             Spacer()
         }
-        .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
-                Spacer()
-                Button("Done") {
-                    focusedField = nil
-                }
-            }
-        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .contentShape(Rectangle())
         .onTapGesture {
             focusedField = nil
