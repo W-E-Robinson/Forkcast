@@ -19,13 +19,18 @@ private struct NutrientProgressBar: View {
 
             VStack(alignment: .trailing, spacing: 2) {
                 ZStack(alignment: .leading) {
-                    Color.gray.opacity(0.2)
+                    Color.gray.opacity(0.15)
 
-                    color
-                        .frame(width: max(fill, 0))
+                    LinearGradient(
+                        colors: [color.opacity(0.75), color],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                    .frame(width: max(fill, 0))
                 }
                 .frame(height: barHeight)
                 .clipShape(RoundedRectangle(cornerRadius: barHeight / 2))
+                .shadow(color: color.opacity(fill > 0 ? 0.35 : 0), radius: 3, y: 1)
 
                 Text(limitLabel)
                     .font(.caption2)
@@ -71,6 +76,10 @@ struct EntriesLog: View {
 
         var body: some View {
             HStack {
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(category.color)
+                    .frame(width: 4)
+
                 Text(item)
                 Spacer()
                 Text("🍽️ \(calories)")
@@ -148,7 +157,6 @@ struct EntriesLog: View {
             }
     }
 
-    private let calorieLimit = 2000
     private let proteinTarget = 120
 
     private var proteinBarColor: Color {
@@ -207,7 +215,7 @@ struct EntriesLog: View {
 
             List {
                 ForEach(categories) { category in
-                    Section(category.rawValue) {
+                    Section {
                         ForEach(
                             entriesByCategory[category] ?? [],
                             id: \.id
@@ -220,6 +228,9 @@ struct EntriesLog: View {
                                 category: entry.category
                             )
                         }
+                    } header: {
+                        Text(category.rawValue)
+                            .foregroundStyle(category.color)
                     }
                 }
             }
