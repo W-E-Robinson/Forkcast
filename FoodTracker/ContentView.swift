@@ -10,6 +10,16 @@ enum MealCategory: String, Codable, CaseIterable, Identifiable {
     case dinner = "Dinner"
 
     var id: String { rawValue }
+
+    var color: Color {
+        switch self {
+        case .breakfast: return .orange
+        case .morningSnack: return .teal
+        case .lunch: return .blue
+        case .afternoonSnack: return .mint
+        case .dinner: return .purple
+        }
+    }
 }
 
 @Model
@@ -29,9 +39,20 @@ class Entry: Identifiable {
     }
 }
 
+let calorieLimit = 2000
+
 struct ContentView: View {
     @Environment(\.modelContext) private var context
-    
+    @Query private var entries: [Entry]
+
+    private var totalCalories: Int {
+        entries.reduce(0) { $0 + $1.calories }
+    }
+
+    private var calorieStatusColor: Color {
+        totalCalories <= calorieLimit ? .green : .red
+    }
+
     private func deleteEntriesFromPreviousDays( ) -> Void{
         do {
             let today = Calendar.current.startOfDay(for: Date())
@@ -72,10 +93,18 @@ struct ContentView: View {
     }
     
     var body: some View {
-        TabView{
+        TabView {
             EntriesLog()
+                .tabItem {
+                    Label("Log", systemImage: "fork.knife")
+                }
             EntryInput()
-        }.task{
+                .tabItem {
+                    Label("Add", systemImage: "plus.circle.fill")
+                }
+        }
+        .tint(calorieStatusColor)
+        .task {
             deleteEntriesFromPreviousDays()
             scheduleRebuildReminder()
         }

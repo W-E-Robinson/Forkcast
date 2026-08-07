@@ -122,6 +122,7 @@ struct EntryInput: View {
                 .focused($focusedField, equals: .protein)
                 .textFieldStyle(.roundedBorder)
             }
+            .tint(categoryToAdd.color)
             .frame(maxWidth: 280)
 
             Button(
@@ -140,6 +141,7 @@ struct EntryInput: View {
                     .frame(maxWidth: 200)
             }
             .buttonStyle(.borderedProminent)
+            .tint(categoryToAdd.color)
             .controlSize(.large)
             .disabled(
                 isAdditionDisabled(item: itemToAdd, calories: caloriesToAdd, protein: proteinToAdd)
