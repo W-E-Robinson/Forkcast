@@ -2,6 +2,8 @@ import SwiftUI
 import Foundation
 import SwiftData
 
+let statusBarCornerRadius: CGFloat = 9
+
 private struct NutrientProgressBar: View {
     let current: Int
     let limit: Int
@@ -29,7 +31,7 @@ private struct NutrientProgressBar: View {
                     .frame(width: max(fill, 0))
                 }
                 .frame(height: barHeight)
-                .clipShape(RoundedRectangle(cornerRadius: barHeight / 2))
+                .clipShape(RoundedRectangle(cornerRadius: statusBarCornerRadius))
                 .shadow(color: color.opacity(fill > 0 ? 0.35 : 0), radius: 3, y: 1)
 
                 Text(limitLabel)
