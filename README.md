@@ -1,7 +1,7 @@
 <h1 align="center">Forkcast</h1>
 
 <p align="center">
-<img width="180" height="184" alt="image" src="https://github.com/user-attachments/assets/52341d40-f65f-488f-909b-d43e6df3626a" />
+<img width="90" height="86" alt="forkcast_logo" src="https://github.com/user-attachments/assets/8ee6fb27-5f54-47cd-b157-9f7093358af9" />
 </p>
 
 A simple app to track calories and protein intake when on a cut. Log food for Breakfast, Morning Snack, Lunch, Afternoon Snack, and Dinner. On app start, any data from previous days is removed.
@@ -12,9 +12,10 @@ A simple app to track calories and protein intake when on a cut. Log food for Br
 - 🌙 Auto resets each day, no manual cleanup required.
 
 ## Video
-<p align="center">
-<img width="782" height="1572" alt="image" src="https://github.com/user-attachments/assets/78066914-c576-4e78-856d-0769b717da83" />
-</p>
-<p align="center">
-<img width="784" height="1574" alt="image" src="https://github.com/user-attachments/assets/93ca2507-8d9c-466b-8b70-30e266df6ba2" />
-</p>
+<div align="center">
+  <video
+    src="https://github.com/user-attachments/assets/64fdcdeb-58d2-4ab8-8ca8-8ba7d8a229bc"
+    controls
+    alt="Demo video of the Forkcast app"
+  </video>
+</div>
