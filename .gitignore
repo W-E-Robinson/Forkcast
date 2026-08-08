@@ -1,3 +1,12 @@
-FoodTracker.xcodeproj/
+# personal
 NOTES.txt
+
+# macOS
 .DS_Store
+
+# Xcode
+DerivedData/
+build/
+*.xcuserstate
+*.xcworkspace/xcuserdata/
+*.xcuserdatad/
