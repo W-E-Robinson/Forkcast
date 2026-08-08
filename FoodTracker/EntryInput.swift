@@ -1,6 +1,22 @@
 import SwiftUI
 import SwiftData
 
+private struct InputBarTextFieldStyle: TextFieldStyle {
+    func _body(configuration: TextField<Self._Label>) -> some View {
+        configuration
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: statusBarCornerRadius)
+                    .fill(Color(.secondarySystemBackground))
+            )
+    }
+}
+
+private extension TextFieldStyle where Self == InputBarTextFieldStyle {
+    static var inputBar: InputBarTextFieldStyle { InputBarTextFieldStyle() }
+}
+
 struct EntryInput: View {
     @Environment(\.modelContext) private var context
 
@@ -14,7 +30,7 @@ struct EntryInput: View {
     }
 
     @FocusState private var focusedField: Field?
-    
+
     private func addEntry(
         item: String,
         calories: Int,
@@ -74,7 +90,7 @@ struct EntryInput: View {
                 }
             }
             .pickerStyle(.menu)
-            .tint(.primary)
+            .tint(categoryToAdd.color)
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
             .background(
@@ -96,7 +112,7 @@ struct EntryInput: View {
                 .onSubmit {
                     focusedField = .calories
                 }
-                .textFieldStyle(.roundedBorder)
+                .textFieldStyle(.inputBar)
 
                 TextField(
                     "Add Calories",
@@ -108,7 +124,7 @@ struct EntryInput: View {
                     .center
                 )
                 .focused($focusedField, equals: .calories)
-                .textFieldStyle(.roundedBorder)
+                .textFieldStyle(.inputBar)
 
                 TextField(
                     "Add Protein",
@@ -120,7 +136,7 @@ struct EntryInput: View {
                     .center
                 )
                 .focused($focusedField, equals: .protein)
-                .textFieldStyle(.roundedBorder)
+                .textFieldStyle(.inputBar)
             }
             .tint(categoryToAdd.color)
             .frame(maxWidth: 280)
