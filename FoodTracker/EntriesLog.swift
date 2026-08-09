@@ -46,6 +46,9 @@ private struct NutrientProgressBar: View {
 struct EntriesLog: View {
     @Query private var entries: [Entry]
     @Environment(\.modelContext) private var context
+
+    @AppStorage("targetCalories") private var calorieLimit = 2000
+    @AppStorage("targetProtein") private var proteinTarget = 120
     
     struct EntryDisplay: View {
         @Environment(\.modelContext) private var context
@@ -158,8 +161,6 @@ struct EntriesLog: View {
                 $0 + $1.protein
             }
     }
-
-    private let proteinTarget = 120
 
     private var proteinBarColor: Color {
         if totalProtein < 70 {
