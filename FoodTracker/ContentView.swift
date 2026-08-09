@@ -39,8 +39,6 @@ class Entry: Identifiable {
     }
 }
 
-let calorieLimit = 2000
-
 private let launchEmojis = ["🍎", "🍕", "🍔", "🥑", "🍩", "🍗", "🍜", "🍇", "🥕", "🍉", "🍓", "🌽"]
 
 private struct FloatingEmojiColumn: View {
@@ -80,15 +78,19 @@ struct ContentView: View {
     @Environment(\.modelContext) private var context
     @Query private var entries: [Entry]
 
+    @AppStorage("targetCalories") private var targetCalories = 2000
+    @AppStorage("targetProtein") private var targetProtein = 120
+
     private var totalCalories: Int {
         entries.reduce(0) { $0 + $1.calories }
     }
 
     private var calorieStatusColor: Color {
-        totalCalories <= calorieLimit ? .green : .red
+        totalCalories <= targetCalories ? .green : .red
     }
 
     @State private var showLaunchAnimation = true
+    @State private var showTargetSetup = false
     @State private var launchIconScale: CGFloat = 0.6
     @State private var launchIconOpacity: Double = 0
     @State private var launchTitleOpacity: Double = 0
@@ -145,10 +147,23 @@ struct ContentView: View {
                     }
             }
             .tint(calorieStatusColor)
-            .opacity(showLaunchAnimation ? 0 : 1)
+            .opacity(showLaunchAnimation || showTargetSetup ? 0 : 1)
             .task {
                 deleteEntriesFromPreviousDays()
                 scheduleRebuildReminder()
+            }
+
+            if showTargetSetup {
+                TargetSetupView(
+                    targetCalories: $targetCalories,
+                    targetProtein: $targetProtein,
+                    onConfirm: {
+                        withAnimation(.easeOut(duration: 0.4)) {
+                            showTargetSetup = false
+                        }
+                    }
+                )
+                .transition(.opacity)
             }
 
             if showLaunchAnimation {
@@ -219,6 +234,7 @@ struct ContentView: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.1) {
                 withAnimation(.easeOut(duration: 0.8)) {
                     showLaunchAnimation = false
+                    showTargetSetup = entries.isEmpty
                 }
             }
         }

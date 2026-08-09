@@ -10,6 +10,7 @@ A simple app to track calories and protein intake when on a cut. Log food for Br
 - 🍳 Colour coded meal sections: Breakfast, Morning Snack, Lunch, Afternoon Snack, Dinner.
 - 🔥 Live calorie & protein bars that shift colour as you close in on targets.
 - 🌙 Auto resets each day, no manual cleanup required.
+- 🎯 <b>Latest feature</b>: Confirm calorie + protein targets at the start of each day (when app is opened with no data inputted yet).
 
 ## Video
 <div align="center">
