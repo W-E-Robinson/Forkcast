@@ -49,14 +49,23 @@ struct EntriesLog: View {
 
     @AppStorage("targetCalories") private var calorieLimit = 2000
     @AppStorage("targetProtein") private var proteinTarget = 120
+    @AppStorage("targetFruitVeg") private var fruitVegTarget = 5
+
+    @AppStorage("trackCalories") private var trackCalories = true
+    @AppStorage("trackProtein") private var trackProtein = true
+    @AppStorage("trackFruitVeg") private var trackFruitVeg = true
     
     struct EntryDisplay: View {
         @Environment(\.modelContext) private var context
+
+        @AppStorage("trackCalories") private var trackCalories = true
+        @AppStorage("trackProtein") private var trackProtein = true
 
         let id: UUID
         let item: String
         let calories: Int
         let protein: Int
+        let fruitVeg: Int
         let category: MealCategory
 
         @State private var showingDeleteConfirmation = false
@@ -87,8 +96,15 @@ struct EntriesLog: View {
 
                 Text(item)
                 Spacer()
-                Text("🍽️ \(calories)")
-                Text("🥩 \(protein)")
+                if trackCalories {
+                    Text("🍽️ \(calories)")
+                }
+                if trackProtein {
+                    Text("🥩 \(protein)")
+                }
+                if fruitVeg > 0 {
+                    Text("🥕 \(fruitVeg)")
+                }
 
                 ZStack(alignment: .trailing) {
                     Button {
@@ -162,6 +178,15 @@ struct EntriesLog: View {
             }
     }
 
+    private var totalFruitVeg: Int {
+        entries
+            .reduce(
+                0
+            ) {
+                $0 + $1.fruitVeg
+            }
+    }
+
     private var proteinBarColor: Color {
         if totalProtein < 70 {
             return .red
@@ -172,43 +197,79 @@ struct EntriesLog: View {
         return .green
     }
 
+    private var fruitVegBarColor: Color {
+        guard fruitVegTarget > 0 else { return .green }
+        let ratio = Double(totalFruitVeg) / Double(fruitVegTarget)
+        if ratio < 0.8 {
+            return .red
+        }
+        if ratio < 1.0 {
+            return Color(red: 1.0, green: 0.75, blue: 0.0)
+        }
+        return .green
+    }
+
     var body: some View {
         VStack {
             VStack(alignment: .leading, spacing: 12) {
-                VStack(alignment: .leading, spacing: 2) {
-                    HStack {
-                        Text("🍽️ Calories")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        Text("\(totalCalories)")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
+                if trackCalories {
+                    VStack(alignment: .leading, spacing: 2) {
+                        HStack {
+                            Text("🍽️ Calories")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            Text("\(totalCalories)")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+                        NutrientProgressBar(
+                            current: totalCalories,
+                            limit: calorieLimit,
+                            limitLabel: "\(calorieLimit)",
+                            color: totalCalories <= calorieLimit ? .green : .red
+                        )
                     }
-                    NutrientProgressBar(
-                        current: totalCalories,
-                        limit: calorieLimit,
-                        limitLabel: "\(calorieLimit)",
-                        color: totalCalories <= calorieLimit ? .green : .red
-                    )
                 }
 
-                VStack(alignment: .leading, spacing: 2) {
-                    HStack {
-                        Text("🥩 Protein")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        Text("\(totalProtein)")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
+                if trackProtein {
+                    VStack(alignment: .leading, spacing: 2) {
+                        HStack {
+                            Text("🥩 Protein")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            Text("\(totalProtein)")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+                        NutrientProgressBar(
+                            current: totalProtein,
+                            limit: proteinTarget,
+                            limitLabel: "\(proteinTarget)",
+                            color: proteinBarColor
+                        )
                     }
-                    NutrientProgressBar(
-                        current: totalProtein,
-                        limit: proteinTarget,
-                        limitLabel: "\(proteinTarget)",
-                        color: proteinBarColor
-                    )
+                }
+
+                if trackFruitVeg {
+                    VStack(alignment: .leading, spacing: 2) {
+                        HStack {
+                            Text("🥕 Fruit & Veg")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            Text("\(totalFruitVeg)")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+                        NutrientProgressBar(
+                            current: totalFruitVeg,
+                            limit: fruitVegTarget,
+                            limitLabel: "\(fruitVegTarget)",
+                            color: fruitVegBarColor
+                        )
+                    }
                 }
             }
             .padding(.horizontal)
@@ -228,6 +289,7 @@ struct EntriesLog: View {
                                 item: entry.item,
                                 calories: entry.calories,
                                 protein: entry.protein,
+                                fruitVeg: entry.fruitVeg,
                                 category: entry.category
                             )
                         }

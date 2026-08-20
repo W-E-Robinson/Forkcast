@@ -29,12 +29,14 @@ class Entry: Identifiable {
     var item: String
     var calories: Int
     var protein: Int
+    var fruitVeg: Int = 0
     var category: MealCategory
 
-    init(item: String, calories: Int, protein: Int, category: MealCategory) {
+    init(item: String, calories: Int, protein: Int, fruitVeg: Int, category: MealCategory) {
         self.item = item
         self.calories = calories
         self.protein = protein
+        self.fruitVeg = fruitVeg
         self.category = category
     }
 }
@@ -80,13 +82,19 @@ struct ContentView: View {
 
     @AppStorage("targetCalories") private var targetCalories = 2000
     @AppStorage("targetProtein") private var targetProtein = 120
+    @AppStorage("targetFruitVeg") private var targetFruitVeg = 5
+
+    @AppStorage("trackCalories") private var trackCalories = true
+    @AppStorage("trackProtein") private var trackProtein = true
+    @AppStorage("trackFruitVeg") private var trackFruitVeg = true
 
     private var totalCalories: Int {
         entries.reduce(0) { $0 + $1.calories }
     }
 
     private var calorieStatusColor: Color {
-        totalCalories <= targetCalories ? .green : .red
+        guard trackCalories else { return .orange }
+        return totalCalories <= targetCalories ? .green : .red
     }
 
     @State private var showLaunchAnimation = true
@@ -135,6 +143,10 @@ struct ContentView: View {
                 TargetSetupView(
                     targetCalories: $targetCalories,
                     targetProtein: $targetProtein,
+                    targetFruitVeg: $targetFruitVeg,
+                    trackCalories: $trackCalories,
+                    trackProtein: $trackProtein,
+                    trackFruitVeg: $trackFruitVeg,
                     onConfirm: {
                         withAnimation(.easeOut(duration: 0.4)) {
                             showTargetSetup = false

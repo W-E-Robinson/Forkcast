@@ -7,12 +7,19 @@ private struct TargetStepperRow: View {
     let step: Int
     let range: ClosedRange<Int>
     let color: Color
+    @Binding var isTracked: Bool
 
     var body: some View {
         VStack(spacing: 8) {
-            Text("\(emoji) \(label)")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
+            HStack {
+                Text("\(emoji) \(label)")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Toggle("Track \(label)", isOn: $isTracked)
+                    .labelsHidden()
+                    .tint(color)
+            }
 
             HStack(spacing: 20) {
                 Button {
@@ -38,6 +45,8 @@ private struct TargetStepperRow: View {
                 .buttonStyle(.plain)
                 .foregroundStyle(color)
             }
+            .disabled(!isTracked)
+            .opacity(isTracked ? 1 : 0.35)
         }
         .padding(.vertical, 12)
         .padding(.horizontal, 16)
@@ -51,17 +60,41 @@ private struct TargetStepperRow: View {
 struct TargetSetupView: View {
     @Binding var targetCalories: Int
     @Binding var targetProtein: Int
+    @Binding var targetFruitVeg: Int
+    @Binding var trackCalories: Bool
+    @Binding var trackProtein: Bool
+    @Binding var trackFruitVeg: Bool
     let onConfirm: () -> Void
 
     @State private var calories: Int
     @State private var protein: Int
+    @State private var fruitVeg: Int
+    @State private var caloriesTracked: Bool
+    @State private var proteinTracked: Bool
+    @State private var fruitVegTracked: Bool
 
-    init(targetCalories: Binding<Int>, targetProtein: Binding<Int>, onConfirm: @escaping () -> Void) {
+    init(
+        targetCalories: Binding<Int>,
+        targetProtein: Binding<Int>,
+        targetFruitVeg: Binding<Int>,
+        trackCalories: Binding<Bool>,
+        trackProtein: Binding<Bool>,
+        trackFruitVeg: Binding<Bool>,
+        onConfirm: @escaping () -> Void
+    ) {
         self._targetCalories = targetCalories
         self._targetProtein = targetProtein
+        self._targetFruitVeg = targetFruitVeg
+        self._trackCalories = trackCalories
+        self._trackProtein = trackProtein
+        self._trackFruitVeg = trackFruitVeg
         self.onConfirm = onConfirm
         self._calories = State(initialValue: targetCalories.wrappedValue)
         self._protein = State(initialValue: targetProtein.wrappedValue)
+        self._fruitVeg = State(initialValue: targetFruitVeg.wrappedValue)
+        self._caloriesTracked = State(initialValue: trackCalories.wrappedValue)
+        self._proteinTracked = State(initialValue: trackProtein.wrappedValue)
+        self._fruitVegTracked = State(initialValue: trackFruitVeg.wrappedValue)
     }
 
     var body: some View {
@@ -84,7 +117,8 @@ struct TargetSetupView: View {
                         value: $calories,
                         step: 100,
                         range: 100...10000,
-                        color: .orange
+                        color: .orange,
+                        isTracked: $caloriesTracked
                     )
                     TargetStepperRow(
                         emoji: "🥩",
@@ -92,7 +126,17 @@ struct TargetSetupView: View {
                         value: $protein,
                         step: 10,
                         range: 10...500,
-                        color: .blue
+                        color: .blue,
+                        isTracked: $proteinTracked
+                    )
+                    TargetStepperRow(
+                        emoji: "🥕",
+                        label: "Fruit & Veg",
+                        value: $fruitVeg,
+                        step: 1,
+                        range: 1...20,
+                        color: .green,
+                        isTracked: $fruitVegTracked
                     )
                 }
                 .frame(maxWidth: 280)
@@ -100,6 +144,10 @@ struct TargetSetupView: View {
                 Button {
                     targetCalories = calories
                     targetProtein = protein
+                    targetFruitVeg = fruitVeg
+                    trackCalories = caloriesTracked
+                    trackProtein = proteinTracked
+                    trackFruitVeg = fruitVegTracked
                     onConfirm()
                 } label: {
                     Text("Confirm")
@@ -118,5 +166,13 @@ struct TargetSetupView: View {
 }
 
 #Preview {
-    TargetSetupView(targetCalories: .constant(2000), targetProtein: .constant(120), onConfirm: {})
+    TargetSetupView(
+        targetCalories: .constant(2000),
+        targetProtein: .constant(120),
+        targetFruitVeg: .constant(5),
+        trackCalories: .constant(true),
+        trackProtein: .constant(true),
+        trackFruitVeg: .constant(true),
+        onConfirm: {}
+    )
 }

@@ -20,9 +20,14 @@ private extension TextFieldStyle where Self == InputBarTextFieldStyle {
 struct EntryInput: View {
     @Environment(\.modelContext) private var context
 
+    @AppStorage("trackCalories") private var trackCalories = true
+    @AppStorage("trackProtein") private var trackProtein = true
+    @AppStorage("trackFruitVeg") private var trackFruitVeg = true
+
     @State private var itemToAdd = ""
     @State private var caloriesToAdd = ""
     @State private var proteinToAdd = ""
+    @State private var fruitVegToAdd = 0
     @State private var categoryToAdd: MealCategory = .breakfast
 
     private enum Field {
@@ -35,12 +40,14 @@ struct EntryInput: View {
         item: String,
         calories: Int,
         protein: Int,
+        fruitVeg: Int,
         category: MealCategory
     ) -> Void {
         let newEntry = Entry(
             item: item ,
             calories: calories ,
             protein: protein,
+            fruitVeg: fruitVeg,
             category: category
         )
         context.insert(newEntry)
@@ -50,17 +57,20 @@ struct EntryInput: View {
         item: String,
         calories: String,
         protein: String,
+        fruitVeg: Int,
         category: MealCategory
     ) -> Void {
         addEntry(
             item: item,
             calories: Int(calories) ?? 0,
             protein: Int(protein) ?? 0,
+            fruitVeg: fruitVeg,
             category: category
         )
         itemToAdd = ""
         caloriesToAdd = ""
         proteinToAdd = ""
+        fruitVegToAdd = 0
     }
     
     private func isAdditionDisabled(
@@ -71,10 +81,10 @@ struct EntryInput: View {
         if (item.isEmpty){
             return true
         }
-        if (calories.isEmpty || Int(calories) == nil){
+        if (trackCalories && (calories.isEmpty || Int(calories) == nil)){
             return true
         }
-        if (protein.isEmpty || Int(protein) == nil){
+        if (trackProtein && (protein.isEmpty || Int(protein) == nil)){
             return true
         }
         return false
@@ -114,29 +124,67 @@ struct EntryInput: View {
                 }
                 .textFieldStyle(.inputBar)
 
-                TextField(
-                    "Add Calories",
-                    text: $caloriesToAdd
-                )
-                .autocorrectionDisabled()
-                .keyboardType(.numberPad)
-                .multilineTextAlignment(
-                    .center
-                )
-                .focused($focusedField, equals: .calories)
-                .textFieldStyle(.inputBar)
+                if trackCalories {
+                    TextField(
+                        "Add Calories",
+                        text: $caloriesToAdd
+                    )
+                    .autocorrectionDisabled()
+                    .keyboardType(.numberPad)
+                    .multilineTextAlignment(
+                        .center
+                    )
+                    .focused($focusedField, equals: .calories)
+                    .textFieldStyle(.inputBar)
+                }
 
-                TextField(
-                    "Add Protein",
-                    text: $proteinToAdd
-                )
-                .autocorrectionDisabled()
-                .keyboardType(.numberPad)
-                .multilineTextAlignment(
-                    .center
-                )
-                .focused($focusedField, equals: .protein)
-                .textFieldStyle(.inputBar)
+                if trackProtein {
+                    TextField(
+                        "Add Protein",
+                        text: $proteinToAdd
+                    )
+                    .autocorrectionDisabled()
+                    .keyboardType(.numberPad)
+                    .multilineTextAlignment(
+                        .center
+                    )
+                    .focused($focusedField, equals: .protein)
+                    .textFieldStyle(.inputBar)
+                }
+
+                if trackFruitVeg {
+                    HStack(spacing: 20) {
+                        Button {
+                            fruitVegToAdd = max(0, fruitVegToAdd - 1)
+                        } label: {
+                            Image(systemName: "minus.circle.fill")
+                                .font(.system(size: 28))
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(categoryToAdd.color)
+                        .disabled(fruitVegToAdd == 0)
+                        .opacity(fruitVegToAdd == 0 ? 0.3 : 1)
+
+                        Text("🥕 \(fruitVegToAdd)")
+                            .font(.body.monospacedDigit())
+                            .frame(minWidth: 80)
+
+                        Button {
+                            fruitVegToAdd += 1
+                        } label: {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.system(size: 28))
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(categoryToAdd.color)
+                    }
+                    .padding(.vertical, 8)
+                    .frame(maxWidth: .infinity)
+                    .background(
+                        RoundedRectangle(cornerRadius: statusBarCornerRadius)
+                            .fill(Color(.secondarySystemBackground))
+                    )
+                }
             }
             .tint(categoryToAdd.color)
             .frame(maxWidth: 280)
@@ -148,6 +196,7 @@ struct EntryInput: View {
                         item: itemToAdd,
                         calories: caloriesToAdd,
                         protein: proteinToAdd,
+                        fruitVeg: fruitVegToAdd,
                         category: categoryToAdd
                     )
                 }
