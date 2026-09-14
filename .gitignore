@@ -10,3 +10,5 @@ build/
 *.xcuserstate
 *.xcworkspace/xcuserdata/
 *.xcuserdatad/
+
+videos/
