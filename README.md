@@ -16,7 +16,7 @@ A simple app to track calories, protein, and fruit & veg intake when on a cut. L
 ## Video
 <div align="center">
   <video
-    src="https://github.com/user-attachments/assets/64fdcdeb-58d2-4ab8-8ca8-8ba7d8a229bc"
+    src="https://github.com/user-attachments/assets/832731aa-8693-4846-a9f2-e8c087f4b34c"
     controls
     alt="Demo video of the Forkcast app"
   </video>
