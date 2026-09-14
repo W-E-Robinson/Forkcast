@@ -88,13 +88,9 @@ struct ContentView: View {
     @AppStorage("trackProtein") private var trackProtein = true
     @AppStorage("trackFruitVeg") private var trackFruitVeg = true
 
-    private var totalCalories: Int {
-        entries.reduce(0) { $0 + $1.calories }
-    }
-
     private var calorieStatusColor: Color {
         guard trackCalories else { return .orange }
-        return totalCalories <= targetCalories ? .green : .red
+        return CalorieStatus.forTotal(DailyTotals(entries).calories, target: targetCalories).color
     }
 
     @State private var showLaunchAnimation = true
@@ -105,17 +101,7 @@ struct ContentView: View {
 
     private func deleteEntriesFromPreviousDays( ) -> Void{
         do {
-            let today = Calendar.current.startOfDay(for: Date())
-            
-            let descriptor = FetchDescriptor<Entry>(
-                predicate: #Predicate { entry in
-                    entry.date < today
-                }
-            )
-            
-            let oldEntries = try context.fetch(descriptor)
-            oldEntries.forEach { context.delete($0) }
-            try context.save()
+            try EntryStore.deleteEntries(before: Date(), in: context)
         } catch {
             print("Delete failed:", error)
         }
