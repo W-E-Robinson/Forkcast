@@ -15,9 +15,7 @@ private struct NutrientProgressBar: View {
     var body: some View {
         GeometryReader { geo in
             let width = geo.size.width
-            let fill = limit > 0
-                ? min(CGFloat(current), CGFloat(limit)) / CGFloat(limit) * width
-                : 0
+            let fill = NutrientBar.fillFraction(current: current, limit: limit) * width
 
             VStack(alignment: .trailing, spacing: 2) {
                 ZStack(alignment: .leading) {
@@ -74,15 +72,7 @@ struct EntriesLog: View {
             id: UUID
         ) -> Void {
             do {
-                let descriptor = FetchDescriptor<Entry>(
-                    predicate: #Predicate { entry in
-                        entry.id == id
-                    }
-                )
-
-                let oldEntries = try context.fetch(descriptor)
-                oldEntries.forEach { context.delete($0) }
-                try context.save()
+                try EntryStore.deleteEntry(id: id, in: context)
             } catch {
                 print("Removal failed:", error)
             }
@@ -151,62 +141,15 @@ struct EntriesLog: View {
     }
 
     private var entriesByCategory: [MealCategory: [Entry]] {
-        Dictionary(grouping: entries, by: \.category)
+        EntryGrouping.byCategory(entries)
     }
 
     private var categories: [MealCategory] {
-        MealCategory.allCases.filter { category in
-            entries.contains { $0.category == category }
-        }
+        EntryGrouping.presentCategories(in: entries)
     }
 
-    private var totalCalories: Int {
-        entries
-            .reduce(
-                0
-            ) {
-                $0 + $1.calories
-            }
-    }
-
-    private var totalProtein: Int {
-        entries
-            .reduce(
-                0
-            ) {
-                $0 + $1.protein
-            }
-    }
-
-    private var totalFruitVeg: Int {
-        entries
-            .reduce(
-                0
-            ) {
-                $0 + $1.fruitVeg
-            }
-    }
-
-    private var proteinBarColor: Color {
-        if totalProtein < 70 {
-            return .red
-        }
-        if totalProtein < 100 {
-            return Color(red: 1.0, green: 0.75, blue: 0.0)
-        }
-        return .green
-    }
-
-    private var fruitVegBarColor: Color {
-        guard fruitVegTarget > 0 else { return .green }
-        let ratio = Double(totalFruitVeg) / Double(fruitVegTarget)
-        if ratio < 0.8 {
-            return .red
-        }
-        if ratio < 1.0 {
-            return Color(red: 1.0, green: 0.75, blue: 0.0)
-        }
-        return .green
+    private var totals: DailyTotals {
+        DailyTotals(entries)
     }
 
     var body: some View {
@@ -219,15 +162,15 @@ struct EntriesLog: View {
                                 .font(.footnote)
                                 .foregroundStyle(.secondary)
                             Spacer()
-                            Text("\(totalCalories)")
+                            Text("\(totals.calories)")
                                 .font(.footnote)
                                 .foregroundStyle(.secondary)
                         }
                         NutrientProgressBar(
-                            current: totalCalories,
+                            current: totals.calories,
                             limit: calorieLimit,
                             limitLabel: "\(calorieLimit)",
-                            color: totalCalories <= calorieLimit ? .green : .red
+                            color: CalorieStatus.forTotal(totals.calories, target: calorieLimit).color
                         )
                     }
                 }
@@ -239,15 +182,15 @@ struct EntriesLog: View {
                                 .font(.footnote)
                                 .foregroundStyle(.secondary)
                             Spacer()
-                            Text("\(totalProtein)")
+                            Text("\(totals.protein)")
                                 .font(.footnote)
                                 .foregroundStyle(.secondary)
                         }
                         NutrientProgressBar(
-                            current: totalProtein,
+                            current: totals.protein,
                             limit: proteinTarget,
                             limitLabel: "\(proteinTarget)",
-                            color: proteinBarColor
+                            color: NutrientStatus.forRatio(current: totals.protein, target: proteinTarget).color
                         )
                     }
                 }
@@ -259,15 +202,15 @@ struct EntriesLog: View {
                                 .font(.footnote)
                                 .foregroundStyle(.secondary)
                             Spacer()
-                            Text("\(totalFruitVeg)")
+                            Text("\(totals.fruitVeg)")
                                 .font(.footnote)
                                 .foregroundStyle(.secondary)
                         }
                         NutrientProgressBar(
-                            current: totalFruitVeg,
+                            current: totals.fruitVeg,
                             limit: fruitVegTarget,
                             limitLabel: "\(fruitVegTarget)",
-                            color: fruitVegBarColor
+                            color: NutrientStatus.forRatio(current: totals.fruitVeg, target: fruitVegTarget).color
                         )
                     }
                 }

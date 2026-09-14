@@ -78,16 +78,13 @@ struct EntryInput: View {
         calories: String,
         protein: String
     ) -> Bool{
-        if (item.isEmpty){
-            return true
-        }
-        if (trackCalories && (calories.isEmpty || Int(calories) == nil)){
-            return true
-        }
-        if (trackProtein && (protein.isEmpty || Int(protein) == nil)){
-            return true
-        }
-        return false
+        EntryValidator.isAdditionDisabled(
+            item: item,
+            calories: calories,
+            protein: protein,
+            trackCalories: trackCalories,
+            trackProtein: trackProtein
+        )
     }
     
     var body: some View {
