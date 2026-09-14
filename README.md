@@ -4,13 +4,14 @@
 <img width="90" height="86" alt="forkcast_logo" src="https://github.com/user-attachments/assets/8ee6fb27-5f54-47cd-b157-9f7093358af9" />
 </p>
 
-A simple app to track calories and protein intake when on a cut. Log food for Breakfast, Morning Snack, Lunch, Afternoon Snack, and Dinner. On app start, any data from previous days is removed.
+A simple app to track calories, protein, and fruit & veg intake when on a cut. Log food for Breakfast, Morning Snack, Lunch, Afternoon Snack, and Dinner. On app start, any data from previous days is removed.
 
 ## Features
 - 🍳 Colour coded meal sections: Breakfast, Morning Snack, Lunch, Afternoon Snack, Dinner.
-- 🔥 Live calorie & protein bars that shift colour as you close in on targets.
+- 🔥 Live calorie, protein & fruit and veg bars that shift colour as you close in on targets.
 - 🌙 Auto resets each day, no manual cleanup required.
-- 🎯 <b>Latest feature</b>: Confirm calorie + protein targets at the start of each day (when app is opened with no data inputted yet).
+- 🎯 Confirm your targets at the start of each day (when app is opened with no data inputted yet).
+- 🥦 <b>Latest feature</b>: Fruit & veg portion tracking, with every metric now optional, track only the ones you care about.
 
 ## Video
 <div align="center">
@@ -20,3 +21,19 @@ A simple app to track calories and protein intake when on a cut. Log food for Br
     alt="Demo video of the Forkcast app"
   </video>
 </div>
+
+## Testing
+
+Run the full suite from the repo root:
+
+```bash
+make test
+```
+
+Tests live in `FoodTrackerTests/` and use [Swift Testing](https://developer.apple.com/documentation/testing):
+
+- `DomainLogicTests.swift` covers the pure logic in `FoodTracker/Domain.swift`, the status colour bands, daily totals, add-entry validation, progress bar geometry, and meal grouping. No simulator state, no database.
+- `PersistenceTests.swift` covers the SwiftData operations (daily reset and entry deletion) against an in-memory container, so nothing touches disk.
+
+## Future ideas
+- ✏️ Edit existing entries, currently an entry can only be added or deleted.
