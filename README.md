@@ -37,3 +37,13 @@ Tests live in `FoodTrackerTests/` and use [Swift Testing](https://developer.appl
 
 ## Future ideas
 - ✏️ Edit existing entries, currently an entry can only be added or deleted.
+
+## Run it on your iPhone
+
+Requires Xcode 26.4+ and a device on iOS 26.4+.
+
+1. Open `FoodTracker.xcodeproj`.
+2. Under the **FoodTracker** target → **Signing & Capabilities**, select your own team and change the bundle identifier to something unique.
+3. Pick your connected iPhone as the destination and hit Run (`⌘R`).
+
+Or pick a simulator and skip step 2.
