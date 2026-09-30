@@ -45,3 +45,6 @@ Requires Xcode 26.4+ and a device on iOS 26.4+.
 3. Pick your connected iPhone as the destination and hit Run (`⌘R`).
 
 Or pick a simulator and skip step 2.
+
+## Future ideas
+- 📲 A home screen widget for quick entry, log a common item without opening the app.
