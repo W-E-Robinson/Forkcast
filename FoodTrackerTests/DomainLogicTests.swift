@@ -60,31 +60,53 @@ struct DailyTotalsTests {
     }
 }
 
-@Suite("Add-entry validation")
+@Suite("Entry validation")
 struct EntryValidatorTests {
     @Test func emptyItemIsAlwaysDisabled() {
-        #expect(EntryValidator.isAdditionDisabled(
+        #expect(EntryValidator.isSaveDisabled(
             item: "", calories: "100", protein: "10",
             trackCalories: true, trackProtein: true) == true)
     }
 
     @Test func validFullyTrackedEntryIsEnabled() {
-        #expect(EntryValidator.isAdditionDisabled(
+        #expect(EntryValidator.isSaveDisabled(
             item: "Apple", calories: "100", protein: "1",
             trackCalories: true, trackProtein: true) == false)
     }
 
     @Test func untrackedMetricIsNotRequired() {
         // Protein untracked → a blank protein field must not block the add.
-        #expect(EntryValidator.isAdditionDisabled(
+        #expect(EntryValidator.isSaveDisabled(
             item: "Apple", calories: "100", protein: "",
             trackCalories: true, trackProtein: false) == false)
     }
 
     @Test func nonNumericTrackedCaloriesIsDisabled() {
-        #expect(EntryValidator.isAdditionDisabled(
+        #expect(EntryValidator.isSaveDisabled(
             item: "Apple", calories: "lots", protein: "1",
             trackCalories: true, trackProtein: true) == true)
+    }
+}
+
+@Suite("Entry draft")
+struct EntryDraftTests {
+    @Test func seedsFromAnExistingEntry() {
+        let entry = Entry(item: "Porridge", calories: 320, protein: 12, fruitVeg: 1, category: .breakfast)
+        #expect(EntryDraft(entry) == EntryDraft(
+            item: "Porridge", calories: "320", protein: "12", fruitVeg: 1, category: .breakfast))
+    }
+
+    @Test func blankOrJunkNumbersCoerceToZero() {
+        // Only reachable for untracked metrics — a tracked blank blocks the save.
+        let draft = EntryDraft(item: "Apple", calories: "", protein: "lots")
+        #expect(draft.calorieValue == 0)
+        #expect(draft.proteinValue == 0)
+    }
+
+    @Test func validationMatchesTheUnderlyingValidator() {
+        let draft = EntryDraft(item: "Apple", calories: "", protein: "10")
+        #expect(draft.isSaveDisabled(trackCalories: true, trackProtein: true) == true)
+        #expect(draft.isSaveDisabled(trackCalories: false, trackProtein: true) == false)
     }
 }
 

@@ -11,7 +11,8 @@ A simple app to track calories, protein, and fruit & veg intake when on a cut. L
 - 🔥 Live calorie, protein & fruit and veg bars that shift colour as you close in on targets.
 - 🌙 Auto resets each day, no manual cleanup required.
 - 🎯 Confirm your targets at the start of each day (when app is opened with no data inputted yet).
-- 🥦 <b>Latest feature</b>: Fruit & veg portion tracking, with every metric now optional, track only the ones you care about.
+- 🥦 Fruit & veg portion tracking, with every metric optional, track only the ones you care about.
+- ✏️ <b>Latest feature</b>: Edit any logged entry, tap the pencil on a row to change its item, numbers, or meal.
 
 ## Video
 <div align="center">
@@ -32,11 +33,8 @@ make test
 
 Tests live in `FoodTrackerTests/` and use [Swift Testing](https://developer.apple.com/documentation/testing):
 
-- `DomainLogicTests.swift` covers the pure logic in `FoodTracker/Domain.swift`, the status colour bands, daily totals, add-entry validation, progress bar geometry, and meal grouping. No simulator state, no database.
-- `PersistenceTests.swift` covers the SwiftData operations (daily reset and entry deletion) against an in-memory container, so nothing touches disk.
-
-## Future ideas
-- ✏️ Edit existing entries, currently an entry can only be added or deleted.
+- `DomainLogicTests.swift` covers the pure logic in `FoodTracker/Domain.swift`, the status colour bands, daily totals, entry validation and drafts, progress bar geometry, and meal grouping. No simulator state, no database.
+- `PersistenceTests.swift` covers the SwiftData operations (daily reset, entry creation, editing, and deletion) against an in-memory container, so nothing touches disk.
 
 ## Run it on your iPhone
 

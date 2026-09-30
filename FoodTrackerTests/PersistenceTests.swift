@@ -50,6 +50,66 @@ struct PersistenceTests {
         #expect(remaining.map(\.item) == ["keep"])
     }
 
+    @Test func updateEntryOverwritesOnlyThatEntrysFields() throws {
+        let context = try makeContext()
+        let target = Entry(item: "Toast", calories: 200, protein: 6, fruitVeg: 0, category: .breakfast)
+        let other = Entry(item: "Apple", calories: 80, protein: 0, fruitVeg: 1, category: .lunch)
+        context.insert(target)
+        context.insert(other)
+
+        try EntryStore.updateEntry(
+            id: target.id,
+            to: EntryDraft(item: "Toast & Jam", calories: "260", protein: "7", fruitVeg: 1, category: .morningSnack),
+            in: context
+        )
+
+        let updated = try #require(
+            try context.fetch(FetchDescriptor<Entry>()).first { $0.id == target.id }
+        )
+        #expect(updated.item == "Toast & Jam")
+        #expect(updated.calories == 260)
+        #expect(updated.protein == 7)
+        #expect(updated.fruitVeg == 1)
+        #expect(updated.category == .morningSnack)
+        #expect(other.item == "Apple")
+        #expect(other.calories == 80)
+    }
+
+    @Test func updateEntryKeepsIdAndDate() throws {
+        let context = try makeContext()
+        let entry = Entry(item: "Toast", calories: 200, protein: 6, fruitVeg: 0, category: .breakfast)
+        let originalDate = Date(timeIntervalSince1970: 1_700_000_000)
+        entry.date = originalDate
+        context.insert(entry)
+
+        try EntryStore.updateEntry(
+            id: entry.id,
+            to: EntryDraft(item: "Bagel", calories: "300", protein: "9", fruitVeg: 0, category: .breakfast),
+            in: context
+        )
+
+        let stored = try #require(try context.fetch(FetchDescriptor<Entry>()).first)
+        #expect(stored.id == entry.id)
+        #expect(stored.date == originalDate)
+    }
+
+    @Test func addEntryCoercesDraftNumbers() throws {
+        let context = try makeContext()
+
+        EntryStore.addEntry(
+            EntryDraft(item: "Salad", calories: "150", protein: "", fruitVeg: 3, category: .lunch),
+            in: context
+        )
+        try context.save()
+
+        let stored = try #require(try context.fetch(FetchDescriptor<Entry>()).first)
+        #expect(stored.item == "Salad")
+        #expect(stored.calories == 150)
+        #expect(stored.protein == 0)   // untracked/blank protein lands as zero
+        #expect(stored.fruitVeg == 3)
+        #expect(stored.category == .lunch)
+    }
+
     @Test func fruitVegDefaultsToZero() throws {
         // Guards the SwiftData default that lets old entries migrate cleanly.
         let entry = Entry(item: "x", calories: 0, protein: 0, fruitVeg: 0, category: .dinner)

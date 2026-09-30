@@ -67,6 +67,7 @@ struct EntriesLog: View {
         let category: MealCategory
 
         @State private var showingDeleteConfirmation = false
+        @State private var showingEditor = false
 
         private func removeEntry(
             id: UUID
@@ -76,6 +77,16 @@ struct EntriesLog: View {
             } catch {
                 print("Removal failed:", error)
             }
+        }
+
+        private var draft: EntryDraft {
+            EntryDraft(
+                item: item,
+                calories: String(calories),
+                protein: String(protein),
+                fruitVeg: fruitVeg,
+                category: category
+            )
         }
 
         var body: some View {
@@ -95,6 +106,16 @@ struct EntriesLog: View {
                 if fruitVeg > 0 {
                     Text("🥕 \(fruitVeg)")
                 }
+
+                Button {
+                    showingEditor = true
+                } label: {
+                    Image(systemName: "pencil")
+                        .foregroundStyle(category.color)
+                }
+                .buttonStyle(.plain)
+                .opacity(showingDeleteConfirmation ? 0 : 1)
+                .disabled(showingDeleteConfirmation)
 
                 ZStack(alignment: .trailing) {
                     Button {
@@ -136,6 +157,9 @@ struct EntriesLog: View {
                         showingDeleteConfirmation = false
                     }
                 }
+            }
+            .sheet(isPresented: $showingEditor) {
+                EntryEditor(id: id, draft: draft)
             }
         }
     }
