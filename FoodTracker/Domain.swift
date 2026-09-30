@@ -71,8 +71,8 @@ struct DailyTotals: Equatable {
 extension Entry: NutrientContributing {}
 
 enum EntryValidator {
-    /// Whether the Add button should be disabled. An untracked metric is never required.
-    static func isAdditionDisabled(
+    /// Whether the Add/Save button should be disabled. An untracked metric is never required.
+    static func isSaveDisabled(
         item: String,
         calories: String,
         protein: String,
@@ -83,6 +83,54 @@ enum EntryValidator {
         if trackCalories && (calories.isEmpty || Int(calories) == nil) { return true }
         if trackProtein && (protein.isEmpty || Int(protein) == nil) { return true }
         return false
+    }
+}
+
+/// The editable contents of an entry, shared by the add and edit flows. Numbers
+/// stay as strings while they're being typed and are coerced on save.
+struct EntryDraft: Equatable {
+    var item: String
+    var calories: String
+    var protein: String
+    var fruitVeg: Int
+    var category: MealCategory
+
+    init(
+        item: String = "",
+        calories: String = "",
+        protein: String = "",
+        fruitVeg: Int = 0,
+        category: MealCategory = .breakfast
+    ) {
+        self.item = item
+        self.calories = calories
+        self.protein = protein
+        self.fruitVeg = fruitVeg
+        self.category = category
+    }
+
+    /// Seeds the form from an existing entry so an edit starts from its current values.
+    init(_ entry: Entry) {
+        self.init(
+            item: entry.item,
+            calories: String(entry.calories),
+            protein: String(entry.protein),
+            fruitVeg: entry.fruitVeg,
+            category: entry.category
+        )
+    }
+
+    var calorieValue: Int { Int(calories) ?? 0 }
+    var proteinValue: Int { Int(protein) ?? 0 }
+
+    func isSaveDisabled(trackCalories: Bool, trackProtein: Bool) -> Bool {
+        EntryValidator.isSaveDisabled(
+            item: item,
+            calories: calories,
+            protein: protein,
+            trackCalories: trackCalories,
+            trackProtein: trackProtein
+        )
     }
 }
 
@@ -123,13 +171,43 @@ enum EntryStore {
     }
 
     static func deleteEntry(id: UUID, in context: ModelContext) throws {
-        let descriptor = FetchDescriptor<Entry>(
-            predicate: #Predicate<Entry> { entry in
-                entry.id == id
-            }
-        )
-        let matches = try context.fetch(descriptor)
+        let matches = try entries(withID: id, in: context)
         matches.forEach { context.delete($0) }
         try context.save()
+    }
+
+    static func addEntry(_ draft: EntryDraft, in context: ModelContext) {
+        context.insert(
+            Entry(
+                item: draft.item,
+                calories: draft.calorieValue,
+                protein: draft.proteinValue,
+                fruitVeg: draft.fruitVeg,
+                category: draft.category
+            )
+        )
+    }
+
+    /// Overwrites the entry's editable fields in place, leaving its id and date alone
+    /// so it keeps its position in today's log.
+    static func updateEntry(id: UUID, to draft: EntryDraft, in context: ModelContext) throws {
+        for entry in try entries(withID: id, in: context) {
+            entry.item = draft.item
+            entry.calories = draft.calorieValue
+            entry.protein = draft.proteinValue
+            entry.fruitVeg = draft.fruitVeg
+            entry.category = draft.category
+        }
+        try context.save()
+    }
+
+    private static func entries(withID id: UUID, in context: ModelContext) throws -> [Entry] {
+        try context.fetch(
+            FetchDescriptor<Entry>(
+                predicate: #Predicate<Entry> { entry in
+                    entry.id == id
+                }
+            )
+        )
     }
 }
